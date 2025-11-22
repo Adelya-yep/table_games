@@ -49,37 +49,45 @@
                         
                         <div class="mb-2">
                             <span class="badge bg-secondary">{{ game.get_category_display }}</span>
-                            <span class="badge bg-info">👥 {{ game.min_players }}-{{ game.max_players }}</span>
-                            <span class="badge bg-warning">⭐ {{ game.difficulty }}/5</span>
+                            <span class="badge bg-info">Игроки: {{ game.min_players }}-{{ game.max_players }}</span>
+                            <span class="badge bg-warning">Сложность: {{ game.difficulty }}/5</span>
                         </div>
-                        
+
                         <div class="mt-auto">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <strong class="text-success">{{ game.price }} руб.</strong>
                                 <small class="text-muted">аренда: {{ game.rental_price_per_day }} руб./день</small>
                             </div>
-                            
+
                             <div class="btn-group w-100" role="group">
                                 <a href="{% url 'game_detail' game.id %}" class="btn btn-outline-primary btn-sm">Подробнее</a>
-                                {% if game.available_for_rental > 0 %}
-                                <a href="{% url 'create_rental_game' game.id %}" class="btn btn-outline-success btn-sm">Арендовать</a>
+                                {% if user.is_authenticated and game.in_stock > 0 %}
+                                <button class="btn btn-success btn-sm add-to-cart-btn"
+                                        data-game-id="{{ game.id }}"
+                                        data-game-name="{{ game.name }}">
+                                    В корзину
+                                </button>
+                                {% elif not user.is_authenticated %}
+                                <a href="{% url 'login' %}?next={% url 'game_list' %}" class="btn btn-outline-secondary btn-sm">Войти для покупки</a>
+                                {% else %}
+                                <button class="btn btn-secondary btn-sm" disabled>Нет в наличии</button>
                                 {% endif %}
                             </div>
-                            
+
                             <div class="mt-2">
                                 <small class="text-muted">
                                     {% if game.in_stock > 0 %}
-                                    <span class="text-success">✓ В наличии: {{ game.in_stock }} шт.</span>
+                                    <span class="text-success">В наличии: {{ game.in_stock }} шт.</span>
                                     {% else %}
-                                    <span class="text-danger">✗ Нет в наличии</span>
+                                    <span class="text-danger">Нет в наличии</span>
                                     {% endif %}
                                 </small>
                                 <br>
                                 <small class="text-muted">
                                     {% if game.available_for_rental > 0 %}
-                                    <span class="text-success">✓ Для аренды: {{ game.available_for_rental }} шт.</span>
+                                    <span class="text-success">Для аренды: {{ game.available_for_rental }} шт.</span>
                                     {% else %}
-                                    <span class="text-danger">✗ Нет для аренды</span>
+                                    <span class="text-danger">Нет для аренды</span>
                                     {% endif %}
                                 </small>
                             </div>
@@ -97,4 +105,118 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Функция для добавления в корзину
+    function addToCart(gameId, gameName) {
+        fetch(`/cart/add/${gameId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Показываем уведомление
+                showNotification(`"${gameName}" добавлен в корзину`, 'success');
+
+                // Обновляем счетчик в навбаре
+                updateCartCounter(data.cart_total);
+            } else {
+                showNotification(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Ошибка при добавлении в корзину', 'error');
+        });
+    }
+
+    // Функция для показа уведомлений
+    function showNotification(message, type) {
+        // Создаем элемент уведомления
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 300px;
+        `;
+        notification.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+
+        document.body.appendChild(notification);
+
+        // Автоматически скрываем через 3 секунды
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 3000);
+    }
+
+    // Функция для обновления счетчика корзины
+    function updateCartCounter(count) {
+        let cartCounter = document.getElementById('cart-counter');
+        if (!cartCounter) {
+            // Создаем счетчик если его нет
+            const cartLink = document.querySelector('a[href*="cart"]');
+            if (cartLink) {
+                cartCounter = document.createElement('span');
+                cartCounter.id = 'cart-counter';
+                cartCounter.className = 'position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger';
+                cartLink.appendChild(cartCounter);
+            }
+        }
+
+        if (cartCounter) {
+            cartCounter.textContent = count;
+            cartCounter.style.display = count > 0 ? 'inline' : 'none';
+        }
+    }
+
+    // Функция для получения CSRF токена
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Обработчики для кнопок "В корзину"
+    document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const gameId = this.dataset.gameId;
+            const gameName = this.dataset.gameName;
+            addToCart(gameId, gameName);
+        });
+    });
+
+    // Загружаем начальное количество товаров в корзине
+    if (document.querySelector('.add-to-cart-btn')) {
+        fetch('/cart/count/')
+            .then(response => response.json())
+            .then(data => {
+                updateCartCounter(data.count);
+            });
+    }
+});
+</script>
 {% endblock %}

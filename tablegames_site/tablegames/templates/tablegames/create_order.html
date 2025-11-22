@@ -1,0 +1,117 @@
+{% extends 'tablegames/base.html' %}
+
+{% block title %}Оформление заказа - TableGames{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Оформление заказа</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Детали заказа</h5>
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                {% for item in items %}
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>{{ item.game.name }} x{{ item.quantity }}</span>
+                                    <span>{{ item.total_price }} руб.</span>
+                                </div>
+                                {% endfor %}
+                                <hr>
+                                <div class="d-flex justify-content-between fw-bold">
+                                    <span>Итого:</span>
+                                    <span>{{ cart.total_price }} руб.</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <h5>Данные доставки</h5>
+                        <div class="card">
+                            <div class="card-body">
+                                <p><strong>Адрес:</strong> {{ customer.address|default:"Не указан" }}</p>
+                                <p><strong>Телефон:</strong> {{ customer.phone|default:"Не указан" }}</p>
+                                <a href="{% url 'profile' %}" class="btn btn-sm btn-outline-primary">Изменить данные</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h5>Подтверждение заказа</h5>
+                        <form method="post" id="order-form">
+                            {% csrf_token %}
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.password.id_for_label }}" class="form-label">{{ form.password.label }}</label>
+                                {{ form.password }}
+                                {% if form.password.errors %}
+                                <div class="text-danger small">{{ form.password.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="alert alert-info">
+                                <small>
+                                    Для подтверждения заказа необходимо ввести ваш пароль.
+                                    После подтверждения заказ будет создан и товары будут зарезервированы.
+                                </small>
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary btn-lg">Подтвердить заказ</button>
+                                <a href="{% url 'cart_view' %}" class="btn btn-outline-secondary">Вернуться в корзину</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('order-form');
+    
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Обработка...';
+        submitBtn.disabled = true;
+        
+        fetch(form.action, {
+            method: 'POST',
+            body: new FormData(form)
+        })
+        .then(response => {
+            if (response.redirected) {
+                window.location.href = response.url;
+            } else {
+                return response.text().then(html => {
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = html;
+                    const errorMessages = tempDiv.querySelector('.alert-danger');
+                    if (errorMessages) {
+                        alert(errorMessages.textContent.trim());
+                    }
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Ошибка при оформлении заказа');
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        });
+    });
+});
+</script>
+{% endblock %}

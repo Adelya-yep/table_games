@@ -4,11 +4,13 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db import transaction
 from django.utils import timezone
-from .models import Game, GameTable, TableBooking, GameRental, PurchaseOrder, Customer, OrderItem
-from .forms import TableBookingForm, GameRentalForm, PurchaseOrderForm, CustomerForm, CustomUserCreationForm, LoginForm
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from .models import Game, GameTable, TableBooking, GameRental, PurchaseOrder, Customer, OrderItem, Cart, CartItem
+from .forms import TableBookingForm, GameRentalForm, PurchaseOrderForm, CustomerForm, CustomUserCreationForm, LoginForm, OrderConfirmationForm
 from decimal import Decimal
 import datetime
-
+import json
 
 def index(request):
     games = Game.objects.filter(in_stock__gt=0)[:6]
@@ -239,3 +241,218 @@ def profile(request):
         'rentals': rentals,
         'orders': orders,
     })
+
+
+@login_required
+def add_to_cart(request, game_id):
+    if request.method == 'POST':
+        try:
+            game = get_object_or_404(Game, id=game_id)
+            cart, created = Cart.objects.get_or_create(user=request.user)
+
+            cart_item, item_created = CartItem.objects.get_or_create(
+                cart=cart,
+                game=game,
+                defaults={'quantity': 1}
+            )
+
+            if not item_created:
+                if cart_item.quantity < game.in_stock:
+                    cart_item.quantity += 1
+                    cart_item.save()
+                else:
+                    return JsonResponse({
+                        'success': False,
+                        'message': f'Нельзя добавить больше {game.in_stock} шт. этого товара'
+                    })
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Товар добавлен в корзину',
+                'cart_total': cart.total_items
+            })
+
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': 'Ошибка при добавлении в корзину'
+            })
+
+    return JsonResponse({'success': False, 'message': 'Неверный запрос'})
+
+
+@login_required
+def update_cart_item(request, item_id):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            action = data.get('action')
+
+            cart_item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
+
+            if action == 'increase':
+                if cart_item.quantity < cart_item.game.in_stock:
+                    cart_item.quantity += 1
+                    cart_item.save()
+                else:
+                    return JsonResponse({
+                        'success': False,
+                        'message': f'Нельзя добавить больше {cart_item.game.in_stock} шт. этого товара'
+                    })
+            elif action == 'decrease':
+                if cart_item.quantity > 1:
+                    cart_item.quantity -= 1
+                    cart_item.save()
+                else:
+                    cart_item.delete()
+                    return JsonResponse({
+                        'success': True,
+                        'message': 'Товар удален из корзины',
+                        'deleted': True
+                    })
+            elif action == 'remove':
+                cart_item.delete()
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Товар удален из корзины',
+                    'deleted': True
+                })
+
+            cart = cart_item.cart
+            return JsonResponse({
+                'success': True,
+                'quantity': cart_item.quantity,
+                'item_total': float(cart_item.total_price),
+                'cart_total': float(cart.total_price),
+                'cart_items_count': cart.total_items
+            })
+
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': 'Ошибка при обновлении корзины'
+            })
+
+    return JsonResponse({'success': False, 'message': 'Неверный запрос'})
+
+
+@login_required
+def cart_view(request):
+    cart, created = Cart.objects.get_or_create(user=request.user)
+    items = cart.items.select_related('game').all()
+
+    return render(request, 'tablegames/cart.html', {
+        'cart': cart,
+        'items': items
+    })
+
+
+@login_required
+def create_order_from_cart(request):
+    cart = get_object_or_404(Cart, user=request.user)
+    items = cart.items.select_related('game').all()
+
+    if not items:
+        messages.error(request, 'Корзина пуста')
+        return redirect('cart_view')
+
+    customer, created = Customer.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        form = OrderConfirmationForm(request.user, request.POST)
+
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    # Проверяем доступность товаров
+                    for item in items:
+                        if item.quantity > item.game.in_stock:
+                            messages.error(request,
+                                           f'Товар "{item.game.name}" недоступен в количестве {item.quantity} шт.')
+                            return redirect('cart_view')
+
+                    # Создаем заказ
+                    total_amount = sum(item.total_price for item in items)
+                    order = PurchaseOrder.objects.create(
+                        customer=customer,
+                        total_amount=total_amount,
+                        shipping_address=customer.address
+                    )
+
+                    # Создаем элементы заказа
+                    for item in items:
+                        OrderItem.objects.create(
+                            order=order,
+                            game=item.game,
+                            quantity=item.quantity,
+                            price=item.game.price
+                        )
+
+                        # Уменьшаем количество на складе
+                        item.game.in_stock -= item.quantity
+                        item.game.save()
+
+                    # Очищаем корзину
+                    cart.items.all().delete()
+
+                    messages.success(request, f'Заказ #{order.order_number} успешно создан!')
+                    return redirect('order_success', order_id=order.id)
+
+            except Exception as e:
+                messages.error(request, f'Ошибка при создании заказа: {str(e)}')
+        else:
+            messages.error(request, 'Неверный пароль')
+
+    else:
+        form = OrderConfirmationForm(request.user)
+
+    return render(request, 'tablegames/create_order.html', {
+        'cart': cart,
+        'items': items,
+        'form': form,
+        'customer': customer
+    })
+
+
+@login_required
+def order_success(request, order_id):
+    order = get_object_or_404(PurchaseOrder, id=order_id, customer__user=request.user)
+    return render(request, 'tablegames/order_success.html', {'order': order})
+
+
+@login_required
+def order_list(request):
+    customer, created = Customer.objects.get_or_create(user=request.user)
+    orders = PurchaseOrder.objects.filter(customer=customer).prefetch_related('items__game')
+
+    return render(request, 'tablegames/order_list.html', {'orders': orders})
+
+
+@login_required
+def cancel_order(request, order_id):
+    order = get_object_or_404(PurchaseOrder, id=order_id, customer__user=request.user)
+
+    if order.status == 'new':
+        try:
+            with transaction.atomic():
+                # Возвращаем товары на склад
+                for item in order.items.all():
+                    item.game.in_stock += item.quantity
+                    item.game.save()
+
+                order.status = 'cancelled'
+                order.save()
+                messages.success(request, f'Заказ #{order.order_number} отменен')
+        except Exception as e:
+            messages.error(request, 'Ошибка при отмене заказа')
+    else:
+        messages.error(request, 'Можно отменять только новые заказы')
+
+    return redirect('order_list')
+
+
+def get_cart_count(request):
+    if request.user.is_authenticated:
+        cart, created = Cart.objects.get_or_create(user=request.user)
+        return JsonResponse({'count': cart.total_items})
+    return JsonResponse({'count': 0})

@@ -1,0 +1,42 @@
+{% extends 'tablegames/base.html' %}
+
+{% block title %}Заказ оформлен - TableGames{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="mb-4">
+                    <div class="text-success" style="font-size: 4rem;">✓</div>
+                </div>
+                
+                <h2 class="card-title text-success">Заказ оформлен!</h2>
+                <p class="lead">Ваш заказ успешно создан и передан в обработку.</p>
+                
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5>Информация о заказе</h5>
+                    </div>
+                    <div class="card-body text-start">
+                        <p><strong>Номер заказа:</strong> {{ order.order_number }}</p>
+                        <p><strong>Дата заказа:</strong> {{ order.created_at|date:"d.m.Y H:i" }}</p>
+                        <p><strong>Общая сумма:</strong> {{ order.total_amount }} руб.</p>
+                        <p><strong>Статус:</strong> 
+                            <span class="badge bg-{% if order.status == 'new' %}primary{% else %}secondary{% endif %}">
+                                {{ order.get_status_display }}
+                            </span>
+                        </p>
+                        <p><strong>Адрес доставки:</strong> {{ order.shipping_address }}</p>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <a href="{% url 'order_list' %}" class="btn btn-primary me-2">Мои заказы</a>
+                    <a href="{% url 'game_list' %}" class="btn btn-outline-primary">Продолжить покупки</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
+from django.contrib.auth.models import User
 
 
 class Game(models.Model):
@@ -78,6 +79,46 @@ class Customer(models.Model):
         return f"{self.user.get_full_name() or self.user.username}"
 
 
+class Cart(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name='Пользователь')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Корзина'
+        verbose_name_plural = 'Корзины'
+
+    def __str__(self):
+        return f'Корзина пользователя {self.user.username}'
+
+    @property
+    def total_price(self):
+        return sum(item.total_price for item in self.items.all())
+
+    @property
+    def total_items(self):
+        return sum(item.quantity for item in self.items.all())
+
+
+class CartItem(models.Model):
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items', verbose_name='Корзина')
+    game = models.ForeignKey(Game, on_delete=models.CASCADE, verbose_name='Игра')
+    quantity = models.PositiveIntegerField(default=1, verbose_name='Количество')
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Элемент корзины'
+        verbose_name_plural = 'Элементы корзины'
+        unique_together = ['cart', 'game']
+
+    def __str__(self):
+        return f'{self.game.name} x{self.quantity}'
+
+    @property
+    def total_price(self):
+        return self.game.price * self.quantity
+
+
 class TableBooking(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, verbose_name='Клиент')
     table = models.ForeignKey(GameTable, on_delete=models.CASCADE, verbose_name='Столик')
@@ -137,34 +178,41 @@ class GameRental(models.Model):
 
 
 class PurchaseOrder(models.Model):
+    STATUS_CHOICES = [
+        ('new', 'Новый'),
+        ('confirmed', 'Подтвержден'),
+        ('processing', 'В обработке'),
+        ('shipped', 'Отправлен'),
+        ('delivered', 'Доставлен'),
+        ('cancelled', 'Отменен'),
+    ]
+
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, verbose_name='Клиент')
-    games = models.ManyToManyField(Game, through='OrderItem', verbose_name='Игры')
+    order_number = models.CharField(max_length=20, unique=True, verbose_name='Номер заказа')
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Общая сумма')
-    status = models.CharField(
-        max_length=20,
-        choices=[
-            ('pending', 'Ожидание'),
-            ('confirmed', 'Подтвержден'),
-            ('shipped', 'Отправлен'),
-            ('delivered', 'Доставлен'),
-            ('cancelled', 'Отменен'),
-        ],
-        default='pending',
-        verbose_name='Статус'
-    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new', verbose_name='Статус')
     shipping_address = models.TextField(verbose_name='Адрес доставки')
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = 'Заказ на покупку'
         verbose_name_plural = 'Заказы на покупку'
+        ordering = ['-created_at']
 
     def __str__(self):
-        return f"Заказ #{self.id} - {self.customer}"
+        return f'Заказ #{self.order_number} - {self.customer}'
+
+    def save(self, *args, **kwargs):
+        if not self.order_number:
+            import random
+            import string
+            self.order_number = 'ORD' + ''.join(random.choices(string.digits, k=7))
+        super().save(*args, **kwargs)
 
 
 class OrderItem(models.Model):
-    order = models.ForeignKey(PurchaseOrder, on_delete=models.CASCADE, verbose_name='Заказ')
+    order = models.ForeignKey(PurchaseOrder, on_delete=models.CASCADE, related_name='items', verbose_name='Заказ')
     game = models.ForeignKey(Game, on_delete=models.CASCADE, verbose_name='Игра')
     quantity = models.PositiveIntegerField(verbose_name='Количество')
     price = models.DecimalField(max_digits=8, decimal_places=2, verbose_name='Цена')

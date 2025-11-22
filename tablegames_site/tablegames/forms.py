@@ -158,3 +158,23 @@ class PurchaseOrderForm(forms.ModelForm):
         widgets = {
             'shipping_address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
+
+class OrderConfirmationForm(forms.Form):
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Введите пароль для подтверждения',
+            'id': 'password-confirm'
+        }),
+        label='Подтверждение пароля'
+    )
+
+    def __init__(self, user, *args, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+
+    def clean_password(self):
+        password = self.cleaned_data.get('password')
+        if not self.user.check_password(password):
+            raise ValidationError('Неверный пароль')
+        return password
