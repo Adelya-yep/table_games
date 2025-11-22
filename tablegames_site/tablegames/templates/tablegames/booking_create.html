@@ -1,0 +1,122 @@
+{% extends 'tablegames/base.html' %}
+
+{% block title %}Бронирование столика - TableGames{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">🪑 Бронирование игрового столика</h4>
+            </div>
+            <div class="card-body">
+                {% if not user.is_authenticated %}
+                <div class="alert alert-warning">
+                    Для бронирования столика необходимо <a href="{% url 'login' %}" class="alert-link">войти в систему</a>.
+                </div>
+                {% else %}
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.table.id_for_label }}" class="form-label">Выберите столик:</label>
+                                {{ form.table }}
+                                {% if form.table.errors %}
+                                <div class="text-danger">{{ form.table.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.number_of_people.id_for_label }}" class="form-label">Количество человек:</label>
+                                {{ form.number_of_people }}
+                                {% if form.number_of_people.errors %}
+                                <div class="text-danger">{{ form.number_of_people.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.booking_date.id_for_label }}" class="form-label">Дата бронирования:</label>
+                                {{ form.booking_date }}
+                                {% if form.booking_date.errors %}
+                                <div class="text-danger">{{ form.booking_date.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.start_time.id_for_label }}" class="form-label">Время начала:</label>
+                                {{ form.start_time }}
+                                {% if form.start_time.errors %}
+                                <div class="text-danger">{{ form.start_time.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.end_time.id_for_label }}" class="form-label">Время окончания:</label>
+                                {{ form.end_time }}
+                                {% if form.end_time.errors %}
+                                <div class="text-danger">{{ form.end_time.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            🪑 Забронировать столик
+                        </button>
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-body">
+                <h5>ℹ️ Информация о бронировании</h5>
+                <ul class="list-unstyled">
+                    <li>✅ Стоимость: 60 руб./час за человека</li>
+                    <li>✅ Минимальное время: 1 час</li>
+                    <li>✅ Можно отменить за 2 часа до начала</li>
+                    <li>✅ Включен доступ к играм из игротеки</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Автоматический расчет времени окончания
+    const startTime = document.getElementById('{{ form.start_time.id_for_label }}');
+    const endTime = document.getElementById('{{ form.end_time.id_for_label }}');
+    
+    startTime.addEventListener('change', function() {
+        if (startTime.value && !endTime.value) {
+            const start = new Date('1970-01-01T' + startTime.value);
+            start.setHours(start.getHours() + 2); // добавляем 2 часа по умолчанию
+            endTime.value = start.toTimeString().slice(0, 5);
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends 'tablegames/base.html' %}
+
+{% block title %}Игровые столики - TableGames{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Игровые столики</h1>
+            <a href="{% url 'create_booking' %}" class="btn btn-primary btn-lg">
+                🪑 Забронировать столик
+            </a>
+        </div>
+        
+        <div class="alert alert-info">
+            <strong>💰 Стоимость:</strong> 60 рублей в час за человека. Минимальное время бронирования - 1 час.
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    {% for table in tables %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{{ table.name }}</h5>
+                <span class="badge {% if table.table_type == 'vip' %}bg-warning{% else %}bg-secondary{% endif %}">
+                    {{ table.get_table_type_display }}
+                </span>
+            </div>
+            <div class="card-body">
+                <p class="card-text">{{ table.description|default:"Уютный столик для комфортной игры." }}</p>
+                
+                <div class="mb-3">
+                    <strong>👥 Вместимость:</strong> до {{ table.capacity }} человек<br>
+                    <strong>💰 Цена:</strong> {{ table.price_per_hour_per_person }} руб./час за человека<br>
+                    <strong>💵 Примерная стоимость:</strong><br>
+                    <small class="text-muted">
+                        - 2 человека на 2 часа: {{ table.price_per_hour_per_person|floatformat:0 }} × 2 × 2 = <strong>{{ table.price_per_hour_per_person|floatformat:0|add:"0"|add:"0"|add:table.price_per_hour_per_person|floatformat:0 }} руб.</strong><br>
+                        - 4 человека на 3 часа: {{ table.price_per_hour_per_person|floatformat:0 }} × 4 × 3 = <strong>{{ table.price_per_hour_per_person|floatformat:0|add:"0"|add:"0"|add:table.price_per_hour_per_person|floatformat:0|add:table.price_per_hour_per_person|floatformat:0 }} руб.</strong>
+                    </small>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="{% url 'create_booking' %}?table={{ table.id }}" class="btn btn-success w-100">
+                    Выбрать этот столик
+                </a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-warning">
+            На данный момент нет доступных столиков для бронирования.
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>📋 Правила бронирования</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">✅ Минимальное время бронирования - 1 час</li>
+                    <li class="list-group-item">✅ Можно забронировать столик заранее</li>
+                    <li class="list-group-item">✅ Отмена бронирования возможна за 2 часа до начала</li>
+                    <li class="list-group-item">✅ В стоимость включено пользование играми из зала</li>
+                    <li class="list-group-item">✅ Бесплатный Wi-Fi и розетки</li>
+                    <li class="list-group-item">✅ Можно заказывать еду и напитки</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

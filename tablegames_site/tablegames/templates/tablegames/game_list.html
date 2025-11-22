@@ -1,0 +1,100 @@
+{% extends 'tablegames/base.html' %}
+
+{% block title %}Каталог игр - TableGames{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-header">
+                <h5>Фильтры</h5>
+            </div>
+            <div class="card-body">
+                <h6>Категории</h6>
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'game_list' %}" class="list-group-item list-group-item-action {% if not category %}active{% endif %}">Все категории</a>
+                    <a href="{% url 'game_list' %}?category=strategy" class="list-group-item list-group-item-action {% if category == 'strategy' %}active{% endif %}">Стратегические</a>
+                    <a href="{% url 'game_list' %}?category=family" class="list-group-item list-group-item-action {% if category == 'family' %}active{% endif %}">Семейные</a>
+                    <a href="{% url 'game_list' %}?category=party" class="list-group-item list-group-item-action {% if category == 'party' %}active{% endif %}">Для вечеринок</a>
+                    <a href="{% url 'game_list' %}?category=cooperative" class="list-group-item list-group-item-action {% if category == 'cooperative' %}active{% endif %}">Кооперативные</a>
+                    <a href="{% url 'game_list' %}?category=card" class="list-group-item list-group-item-action {% if category == 'card' %}active{% endif %}">Карточные</a>
+                    <a href="{% url 'game_list' %}?category=rpg" class="list-group-item list-group-item-action {% if category == 'rpg' %}active{% endif %}">Ролевые</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-9">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Каталог игр</h1>
+            <div>
+                <span class="badge bg-primary">Всего игр: {{ games.count }}</span>
+            </div>
+        </div>
+
+        <div class="row">
+            {% for game in games %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100">
+                    {% if game.image %}
+                    <img src="{{ game.image.url }}" class="card-img-top" alt="{{ game.name }}" style="height: 200px; object-fit: cover;">
+                    {% else %}
+                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                        <span class="text-muted">Нет изображения</span>
+                    </div>
+                    {% endif %}
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">{{ game.name }}</h5>
+                        <p class="card-text flex-grow-1">{{ game.description|truncatewords:15 }}</p>
+                        
+                        <div class="mb-2">
+                            <span class="badge bg-secondary">{{ game.get_category_display }}</span>
+                            <span class="badge bg-info">👥 {{ game.min_players }}-{{ game.max_players }}</span>
+                            <span class="badge bg-warning">⭐ {{ game.difficulty }}/5</span>
+                        </div>
+                        
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <strong class="text-success">{{ game.price }} руб.</strong>
+                                <small class="text-muted">аренда: {{ game.rental_price_per_day }} руб./день</small>
+                            </div>
+                            
+                            <div class="btn-group w-100" role="group">
+                                <a href="{% url 'game_detail' game.id %}" class="btn btn-outline-primary btn-sm">Подробнее</a>
+                                {% if game.available_for_rental > 0 %}
+                                <a href="{% url 'create_rental_game' game.id %}" class="btn btn-outline-success btn-sm">Арендовать</a>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    {% if game.in_stock > 0 %}
+                                    <span class="text-success">✓ В наличии: {{ game.in_stock }} шт.</span>
+                                    {% else %}
+                                    <span class="text-danger">✗ Нет в наличии</span>
+                                    {% endif %}
+                                </small>
+                                <br>
+                                <small class="text-muted">
+                                    {% if game.available_for_rental > 0 %}
+                                    <span class="text-success">✓ Для аренды: {{ game.available_for_rental }} шт.</span>
+                                    {% else %}
+                                    <span class="text-danger">✗ Нет для аренды</span>
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    Игры не найдены. Попробуйте изменить фильтры.
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

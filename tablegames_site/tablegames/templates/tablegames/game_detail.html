@@ -1,0 +1,101 @@
+{% extends 'tablegames/base.html' %}
+
+{% block title %}{{ game.name }} - TableGames{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        {% if game.image %}
+        <img src="{{ game.image.url }}" class="img-fluid rounded" alt="{{ game.name }}">
+        {% else %}
+        <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 400px;">
+            <span class="text-muted">Нет изображения</span>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="col-md-6">
+        <h1>{{ game.name }}</h1>
+        <span class="badge bg-secondary mb-3">{{ game.get_category_display }}</span>
+        
+        <p class="lead">{{ game.description }}</p>
+        
+        <div class="row mb-4">
+            <div class="col-6">
+                <strong>Количество игроков:</strong><br>
+                <span class="badge bg-info">👥 {{ game.min_players }}-{{ game.max_players }}</span>
+            </div>
+            <div class="col-6">
+                <strong>Время игры:</strong><br>
+                <span class="badge bg-primary">⏱️ {{ game.play_time_minutes }} мин.</span>
+            </div>
+            <div class="col-6 mt-2">
+                <strong>Сложность:</strong><br>
+                <span class="badge bg-warning">⭐ {{ game.difficulty }}/5</span>
+            </div>
+            <div class="col-6 mt-2">
+                <strong>Наличие:</strong><br>
+                {% if game.in_stock > 0 %}
+                <span class="badge bg-success">✓ В наличии</span>
+                {% else %}
+                <span class="badge bg-danger">✗ Нет в наличии</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Цены</h5>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="text-success mb-0">{{ game.price }} руб.</h4>
+                        <small class="text-muted">Цена покупки</small>
+                    </div>
+                    <div class="text-end">
+                        <h5 class="text-primary mb-0">{{ game.rental_price_per_day }} руб./день</h5>
+                        <small class="text-muted">Аренда</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="d-grid gap-2 d-md-flex">
+            {% if game.in_stock > 0 %}
+            <button class="btn btn-success btn-lg flex-fill me-md-2" disabled>
+                🛒 Купить
+            </button>
+            {% endif %}
+            
+            {% if game.available_for_rental > 0 %}
+            <a href="{% url 'create_rental_game' game.id %}" class="btn btn-primary btn-lg flex-fill">
+                🕒 Арендовать
+            </a>
+            {% else %}
+            <button class="btn btn-secondary btn-lg flex-fill" disabled>
+                ✗ Нет для аренды
+            </button>
+            {% endif %}
+        </div>
+        
+        {% if not user.is_authenticated %}
+        <div class="alert alert-warning mt-3">
+            Для аренды игр необходимо <a href="{% url 'login' %}" class="alert-link">войти в систему</a>.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-12">
+        <h3>Похожие игры</h3>
+        <div class="row">
+            {% comment %} Здесь можно добавить логику для похожих игр {% endcomment %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    Рекомендуемые игры появятся здесь после добавления большего количества игр в каталог.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

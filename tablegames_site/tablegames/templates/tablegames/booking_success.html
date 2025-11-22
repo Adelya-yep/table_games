@@ -1,0 +1,50 @@
+{% extends 'tablegames/base.html' %}
+
+{% block title %}Бронирование успешно - TableGames{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="mb-4">
+                    <span style="font-size: 4rem;">✅</span>
+                </div>
+                
+                <h2 class="card-title text-success">Бронирование подтверждено!</h2>
+                <p class="lead">Ваш столик успешно забронирован.</p>
+                
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5>Детали бронирования</h5>
+                    </div>
+                    <div class="card-body text-start">
+                        <p><strong>Столик:</strong> {{ booking.table.name }}</p>
+                        <p><strong>Дата:</strong> {{ booking.booking_date }}</p>
+                        <p><strong>Время:</strong> {{ booking.start_time }} - {{ booking.end_time }}</p>
+                        <p><strong>Количество человек:</strong> {{ booking.number_of_people }}</p>
+                        <p><strong>Общая стоимость:</strong> {{ booking.total_price }} руб.</p>
+                        <p><strong>Статус:</strong> 
+                            <span class="badge bg-{% if booking.status == 'confirmed' %}success{% else %}warning{% endif %}">
+                                {{ booking.get_status_display }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <a href="{% url 'index' %}" class="btn btn-primary me-2">На главную</a>
+                    <a href="{% url 'profile' %}" class="btn btn-outline-primary">Мои бронирования</a>
+                </div>
+                
+                <div class="alert alert-info mt-4">
+                    <small>
+                        <strong>Важно:</strong> Пожалуйста, приходите за 10-15 минут до начала бронирования. 
+                        При отмене бронирования сообщите нам за 2 часа до начала.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,130 @@
+{% extends 'tablegames/base.html' %}
+
+{% block title %}Аренда игры - TableGames{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">🕒 Аренда настольной игры</h4>
+            </div>
+            <div class="card-body">
+                {% if not user.is_authenticated %}
+                <div class="alert alert-warning">
+                    Для аренды игр необходимо <a href="{% url 'login' %}" class="alert-link">войти в систему</a>.
+                </div>
+                {% else %}
+                
+                {% if game %}
+                <div class="alert alert-info">
+                    Вы арендуете: <strong>{{ game.name }}</strong>
+                </div>
+                {% endif %}
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.game.id_for_label }}" class="form-label">Выберите игру:</label>
+                                {{ form.game }}
+                                {% if form.game.errors %}
+                                <div class="text-danger">{{ form.game.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.quantity.id_for_label }}" class="form-label">Количество:</label>
+                                {{ form.quantity }}
+                                {% if form.quantity.errors %}
+                                <div class="text-danger">{{ form.quantity.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.rental_start_date.id_for_label }}" class="form-label">Дата начала аренды:</label>
+                                {{ form.rental_start_date }}
+                                {% if form.rental_start_date.errors %}
+                                <div class="text-danger">{{ form.rental_start_date.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.rental_end_date.id_for_label }}" class="form-label">Дата окончания аренды:</label>
+                                {{ form.rental_end_date }}
+                                {% if form.rental_end_date.errors %}
+                                <div class="text-danger">{{ form.rental_end_date.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            🕒 Оформить аренду
+                        </button>
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-body">
+                <h5>ℹ️ Условия аренды</h5>
+                <ul class="list-unstyled">
+                    <li>✅ Минимальный срок аренды: 1 день</li>
+                    <li>✅ Максимальный срок аренды: 30 дней</li>
+                    <li>✅ Залог не требуется</li>
+                    <li>✅ Бесплатная доставка при аренде от 3 дней</li>
+                    <li>✅ Возврат возможен досрочно</li>
+                    <li>❌ При порче игры взимается штраф</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Автоматическая установка даты окончания
+    const startDate = document.getElementById('{{ form.rental_start_date.id_for_label }}');
+    const endDate = document.getElementById('{{ form.rental_end_date.id_for_label }}');
+    
+    startDate.addEventListener('change', function() {
+        if (startDate.value && !endDate.value) {
+            const start = new Date(startDate.value);
+            start.setDate(start.getDate() + 1); // добавляем 1 день по умолчанию
+            const endDateStr = start.toISOString().split('T')[0];
+            endDate.value = endDateStr;
+        }
+    });
+    
+    // Обновление доступного количества при выборе игры
+    const gameSelect = document.getElementById('{{ form.game.id_for_label }}');
+    const quantityInput = document.getElementById('{{ form.quantity.id_for_label }}');
+    
+    gameSelect.addEventListener('change', function() {
+        // В реальном приложении здесь можно сделать AJAX запрос
+        // для получения доступного количества выбранной игры
+        quantityInput.value = 1;
+    });
+});
+</script>
+{% endblock %}

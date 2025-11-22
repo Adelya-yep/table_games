@@ -163,7 +163,11 @@ def booking_success(request, booking_id):
 @login_required
 def rental_success(request, rental_id):
     rental = get_object_or_404(GameRental, id=rental_id, customer__user=request.user)
-    return render(request, 'tablegames/rental_success.html', {'rental': rental})
+    rental_days = (rental.rental_end_date - rental.rental_start_date).days
+    return render(request, 'tablegames/rental_success.html', {
+        'rental': rental,
+        'rental_days': rental_days
+    })
 
 
 @login_required

@@ -1,0 +1,172 @@
+{% extends 'tablegames/base.html' %}
+
+{% block title %}Мой профиль - TableGames{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>👤 Мой профиль</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Имя пользователя:</label>
+                        <input type="text" class="form-control" value="{{ user.username }}" disabled>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Email:</label>
+                        <input type="email" class="form-control" value="{{ user.email }}" disabled>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.phone.id_for_label }}" class="form-label">Телефон:</label>
+                        {{ form.phone }}
+                        {% if form.phone.errors %}
+                        <div class="text-danger">{{ form.phone.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.address.id_for_label }}" class="form-label">Адрес:</label>
+                        {{ form.address }}
+                        {% if form.address.errors %}
+                        <div class="text-danger">{{ form.address.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">Обновить профиль</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <ul class="nav nav-tabs" id="profileTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="bookings-tab" data-bs-toggle="tab" data-bs-target="#bookings" type="button" role="tab">
+                    🪑 Мои бронирования
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="rentals-tab" data-bs-toggle="tab" data-bs-target="#rentals" type="button" role="tab">
+                    🕒 Мои аренды
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders" type="button" role="tab">
+                    🛒 Мои заказы
+                </button>
+            </li>
+        </ul>
+        
+        <div class="tab-content mt-3" id="profileTabsContent">
+            <!-- Бронирования -->
+            <div class="tab-pane fade show active" id="bookings" role="tabpanel">
+                {% if bookings %}
+                {% for booking in bookings %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6>{{ booking.table.name }}</h6>
+                                <p class="mb-1">
+                                    <strong>Дата:</strong> {{ booking.booking_date }}<br>
+                                    <strong>Время:</strong> {{ booking.start_time }} - {{ booking.end_time }}<br>
+                                    <strong>Людей:</strong> {{ booking.number_of_people }}<br>
+                                    <strong>Стоимость:</strong> {{ booking.total_price }} руб.
+                                </p>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-{% if booking.status == 'confirmed' %}success{% elif booking.status == 'pending' %}warning{% else %}secondary{% endif %}">
+                                    {{ booking.get_status_display }}
+                                </span>
+                                <br>
+                                <small class="text-muted">{{ booking.created_at|date:"d.m.Y H:i" }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="alert alert-info">
+                    У вас нет активных бронирований.
+                    <a href="{% url 'table_list' %}" class="alert-link">Забронировать столик</a>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Аренды -->
+            <div class="tab-pane fade" id="rentals" role="tabpanel">
+                {% if rentals %}
+                {% for rental in rentals %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6>{{ rental.game.name }}</h6>
+                                <p class="mb-1">
+                                    <strong>Период:</strong> {{ rental.rental_start_date }} - {{ rental.rental_end_date }}<br>
+                                    <strong>Количество:</strong> {{ rental.quantity }} шт.<br>
+                                    <strong>Стоимость:</strong> {{ rental.total_price }} руб.
+                                </p>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-{% if rental.status == 'active' %}success{% elif rental.status == 'pending' %}warning{% else %}secondary{% endif %}">
+                                    {{ rental.get_status_display }}
+                                </span>
+                                <br>
+                                <small class="text-muted">{{ rental.created_at|date:"d.m.Y H:i" }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="alert alert-info">
+                    У вас нет активных аренд.
+                    <a href="{% url 'game_list' %}" class="alert-link">Арендовать игру</a>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Заказы -->
+            <div class="tab-pane fade" id="orders" role="tabpanel">
+                {% if orders %}
+                {% for order in orders %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6>Заказ #{{ order.id }}</h6>
+                                <p class="mb-1">
+                                    <strong>Сумма:</strong> {{ order.total_amount }} руб.<br>
+                                    <strong>Адрес доставки:</strong> {{ order.shipping_address|truncatewords:5 }}
+                                </p>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-{% if order.status == 'confirmed' %}success{% elif order.status == 'pending' %}warning{% else %}secondary{% endif %}">
+                                    {{ order.get_status_display }}
+                                </span>
+                                <br>
+                                <small class="text-muted">{{ order.created_at|date:"d.m.Y H:i" }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="alert alert-info">
+                    У вас нет заказов.
+                    <a href="{% url 'game_list' %}" class="alert-link">Перейти к покупкам</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

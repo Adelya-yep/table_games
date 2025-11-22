@@ -1,0 +1,50 @@
+{% extends 'tablegames/base.html' %}
+
+{% block title %}Аренда оформлена - TableGames{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="mb-4">
+                    <span style="font-size: 4rem;">🎮</span>
+                </div>
+                
+                <h2 class="card-title text-success">Аренда оформлена!</h2>
+                <p class="lead">Игра успешно забронирована для аренды.</p>
+                
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5>Детали аренды</h5>
+                    </div>
+                    <div class="card-body text-start">
+                        <p><strong>Игра:</strong> {{ rental.game.name }}</p>
+                        <p><strong>Период аренды:</strong> {{ rental.rental_start_date }} - {{ rental.rental_end_date }}</p>
+                        <p><strong>Количество дней:</strong> {{ rental_days }}</p>
+                        <p><strong>Количество:</strong> {{ rental.quantity }} шт.</p>
+                        <p><strong>Общая стоимость:</strong> {{ rental.total_price }} руб.</p>
+                        <p><strong>Статус:</strong> 
+                            <span class="badge bg-{% if rental.status == 'confirmed' %}success{% else %}warning{% endif %}">
+                                {{ rental.get_status_display }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <a href="{% url 'index' %}" class="btn btn-primary me-2">На главную</a>
+                    <a href="{% url 'profile' %}" class="btn btn-outline-primary">Мои аренды</a>
+                </div>
+                
+                <div class="alert alert-info mt-4">
+                    <small>
+                        <strong>Условия аренды:</strong> Пожалуйста, бережно обращайтесь с игрой. 
+                        При порче или утере взимается штраф в размере стоимости игры.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
