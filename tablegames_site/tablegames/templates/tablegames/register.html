@@ -7,12 +7,12 @@
     <div class="col-md-8 col-lg-6">
         <div class="card">
             <div class="card-header">
-                <h4 class="card-title mb-0">📝 Регистрация аккаунта</h4>
+                <h4 class="card-title mb-0">Регистрация аккаунта</h4>
             </div>
             <div class="card-body">
                 <form method="post">
                     {% csrf_token %}
-                    
+
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
@@ -33,7 +33,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="{{ form.username.id_for_label }}" class="form-label">Имя пользователя:</label>
                         {{ form.username }}
@@ -42,7 +42,7 @@
                         {% endif %}
                         <div class="form-text">Только буквы, цифры и @/./+/-/_.</div>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="{{ form.email.id_for_label }}" class="form-label">Email:</label>
                         {{ form.email }}
@@ -50,7 +50,7 @@
                         <div class="text-danger small">{{ form.email.errors }}</div>
                         {% endif %}
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="{{ form.password1.id_for_label }}" class="form-label">Пароль:</label>
                         {{ form.password1 }}
@@ -66,7 +66,7 @@
                             </ul>
                         </div>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="{{ form.password2.id_for_label }}" class="form-label">Подтверждение пароля:</label>
                         {{ form.password2 }}
@@ -74,7 +74,7 @@
                         <div class="text-danger small">{{ form.password2.errors }}</div>
                         {% endif %}
                     </div>
-                    
+
                     <div class="card mb-3">
                         <div class="card-body">
                             <div class="form-check mb-3">
@@ -86,7 +86,7 @@
                                 <div class="text-danger small">{{ form.agree_to_terms.errors }}</div>
                                 {% endif %}
                             </div>
-                            
+
                             <div class="form-check">
                                 {{ form.privacy_policy }}
                                 <label class="form-check-label" for="{{ form.privacy_policy.id_for_label }}">
@@ -98,7 +98,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     {% if form.non_field_errors %}
                     <div class="alert alert-danger">
                         {% for error in form.non_field_errors %}
@@ -106,7 +106,7 @@
                         {% endfor %}
                     </div>
                     {% endif %}
-                    
+
                     <div class="d-grid gap-2">
                         <button type="submit" class="btn btn-primary btn-lg">Зарегистрироваться</button>
                         <a href="{% url 'login' %}" class="btn btn-outline-secondary">Уже есть аккаунт? Войти</a>
@@ -117,32 +117,31 @@
     </div>
 </div>
 
-<!-- Модальные окна с правилами -->
 <div class="modal fade" id="termsModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">📋 Правила и условия использования</h5>
+                <h5 class="modal-title">Правила и условия использования</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <h6>1. Общие положения</h6>
                 <p>TableGames предоставляет услуги бронирования столиков, аренды и покупки настольных игр.</p>
-                
+
                 <h6>2. Бронирование столиков</h6>
                 <ul>
                     <li>Минимальное время бронирования - 1 час</li>
                     <li>Отмена бронирования возможна не менее чем за 2 часа до начала</li>
                     <li>При опоздании более чем на 30 минут бронь аннулируется</li>
                 </ul>
-                
+
                 <h6>3. Аренда игр</h6>
                 <ul>
                     <li>Максимальный срок аренды - 30 дней</li>
                     <li>При порче игры взимается штраф в размере стоимости игры</li>
                     <li>Возврат возможен досрочно без перерасчета стоимости</li>
                 </ul>
-                
+
                 <h6>4. Оплата</h6>
                 <p>Оплата производится наличными или банковской картой в момент получения услуги.</p>
             </div>
@@ -157,7 +156,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">🔒 Политика конфиденциальности</h5>
+                <h5 class="modal-title">Политика конфиденциальности</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">

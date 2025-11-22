@@ -1,9 +1,12 @@
-from .models import TableBooking, GameRental, PurchaseOrder, Customer
-from django.utils import timezone
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator, MaxValueValidator
+from .models import TableBooking, GameRental, PurchaseOrder, Customer
+from django.utils import timezone
+import datetime
+
 
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(
@@ -49,6 +52,7 @@ class CustomUserCreationForm(UserCreationForm):
             raise ValidationError('Пользователь с таким email уже существует')
         return email
 
+
 class LoginForm(forms.Form):
     username = forms.CharField(
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Имя пользователя'})
@@ -56,6 +60,7 @@ class LoginForm(forms.Form):
     password = forms.CharField(
         widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Пароль'})
     )
+
 
 class CustomerForm(forms.ModelForm):
     class Meta:
@@ -94,7 +99,6 @@ class TableBookingForm(forms.ModelForm):
             if start_time >= end_time:
                 raise ValidationError('Время окончания должно быть позже времени начала')
 
-            # Проверка доступности столика
             if TableBooking.objects.filter(
                     table=table,
                     booking_date=booking_date,
