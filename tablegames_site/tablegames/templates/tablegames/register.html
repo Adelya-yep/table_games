@@ -1,0 +1,187 @@
+{% extends 'tablegames/base.html' %}
+
+{% block title %}Регистрация - TableGames{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">📝 Регистрация аккаунта</h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.first_name.id_for_label }}" class="form-label">Имя:</label>
+                                {{ form.first_name }}
+                                {% if form.first_name.errors %}
+                                <div class="text-danger small">{{ form.first_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.last_name.id_for_label }}" class="form-label">Фамилия:</label>
+                                {{ form.last_name }}
+                                {% if form.last_name.errors %}
+                                <div class="text-danger small">{{ form.last_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.username.id_for_label }}" class="form-label">Имя пользователя:</label>
+                        {{ form.username }}
+                        {% if form.username.errors %}
+                        <div class="text-danger small">{{ form.username.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">Только буквы, цифры и @/./+/-/_.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.email.id_for_label }}" class="form-label">Email:</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                        <div class="text-danger small">{{ form.email.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.password1.id_for_label }}" class="form-label">Пароль:</label>
+                        {{ form.password1 }}
+                        {% if form.password1.errors %}
+                        <div class="text-danger small">{{ form.password1.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">
+                            <ul class="small">
+                                <li>Пароль не должен быть слишком похож на другую вашу личную информацию</li>
+                                <li>Пароль должен содержать как минимум 8 символов</li>
+                                <li>Пароль не должен быть слишком простым и распространенным</li>
+                                <li>Пароль не может состоять только из цифр</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.password2.id_for_label }}" class="form-label">Подтверждение пароля:</label>
+                        {{ form.password2 }}
+                        {% if form.password2.errors %}
+                        <div class="text-danger small">{{ form.password2.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="form-check mb-3">
+                                {{ form.agree_to_terms }}
+                                <label class="form-check-label" for="{{ form.agree_to_terms.id_for_label }}">
+                                    Я согласен с <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">правилами и условиями</a> использования сервиса
+                                </label>
+                                {% if form.agree_to_terms.errors %}
+                                <div class="text-danger small">{{ form.agree_to_terms.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="form-check">
+                                {{ form.privacy_policy }}
+                                <label class="form-check-label" for="{{ form.privacy_policy.id_for_label }}">
+                                    Я согласен с <a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal">политикой конфиденциальности</a>
+                                </label>
+                                {% if form.privacy_policy.errors %}
+                                <div class="text-danger small">{{ form.privacy_policy.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">Зарегистрироваться</button>
+                        <a href="{% url 'login' %}" class="btn btn-outline-secondary">Уже есть аккаунт? Войти</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальные окна с правилами -->
+<div class="modal fade" id="termsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">📋 Правила и условия использования</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>1. Общие положения</h6>
+                <p>TableGames предоставляет услуги бронирования столиков, аренды и покупки настольных игр.</p>
+                
+                <h6>2. Бронирование столиков</h6>
+                <ul>
+                    <li>Минимальное время бронирования - 1 час</li>
+                    <li>Отмена бронирования возможна не менее чем за 2 часа до начала</li>
+                    <li>При опоздании более чем на 30 минут бронь аннулируется</li>
+                </ul>
+                
+                <h6>3. Аренда игр</h6>
+                <ul>
+                    <li>Максимальный срок аренды - 30 дней</li>
+                    <li>При порче игры взимается штраф в размере стоимости игры</li>
+                    <li>Возврат возможен досрочно без перерасчета стоимости</li>
+                </ul>
+                
+                <h6>4. Оплата</h6>
+                <p>Оплата производится наличными или банковской картой в момент получения услуги.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="privacyModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">🔒 Политика конфиденциальности</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>1. Сбор информации</h6>
+                <p>Мы собираем информацию, необходимую для предоставления услуг: имя, контактные данные, историю заказов.</p>
+                
+                <h6>2. Использование информации</h6>
+                <p>Информация используется для:</p>
+                <ul>
+                    <li>Обработки заказов и бронирований</li>
+                    <li>Связи с клиентами</li>
+                    <li>Улучшения качества услуг</li>
+                </ul>
+                
+                <h6>3. Защита данных</h6>
+                <p>Мы принимаем меры для защиты ваших персональных данных от несанкционированного доступа.</p>
+                
+                <h6>4. Cookies</h6>
+                <p>Сайт использует cookies для работы корзины и авторизации пользователей.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
