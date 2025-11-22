@@ -10,7 +10,7 @@
             <div class="col-md-4">
                 <div class="card">
                     <div class="card-body">
-                        <h5 class="card-title">🛒 Купить игры</h5>
+                        <h5 class="card-title">Купить игры</h5>
                         <p class="card-text">Большой выбор настольных игр для покупки</p>
                         <a href="{% url 'game_list' %}" class="btn btn-primary">Смотреть игры</a>
                     </div>
@@ -19,7 +19,7 @@
             <div class="col-md-4">
                 <div class="card">
                     <div class="card-body">
-                        <h5 class="card-title">🕒 Арендовать игры</h5>
+                        <h5 class="card-title">Арендовать игры</h5>
                         <p class="card-text">Арендуйте игры на любой срок</p>
                         <a href="{% url 'game_list' %}" class="btn btn-success">Арендовать</a>
                     </div>
@@ -28,7 +28,7 @@
             <div class="col-md-4">
                 <div class="card">
                     <div class="card-body">
-                        <h5 class="card-title">🪑 Бронировать столик</h5>
+                        <h5 class="card-title">Бронировать столик</h5>
                         <p class="card-text">Забронируйте столик для игры в нашем магазине</p>
                         <a href="{% url 'table_list' %}" class="btn btn-warning">Бронировать</a>
                     </div>
@@ -38,29 +38,176 @@
     </div>
 </div>
 
+<!-- Слайдер -->
 <div class="row mt-5">
     <div class="col-12">
         <h2>Популярные игры</h2>
+        <div id="gameCarousel" class="carousel slide" data-bs-ride="carousel">
+            <!-- Индикаторы -->
+            <div class="carousel-indicators">
+                {% for game in games %}
+                <button type="button" data-bs-target="#gameCarousel" data-bs-slide-to="{{ forloop.counter0 }}"
+                        class="{% if forloop.first %}active{% endif %}" aria-current="{% if forloop.first %}true{% endif %}"
+                        aria-label="Slide {{ forloop.counter }}"></button>
+                {% endfor %}
+            </div>
+
+            <!-- Слайды -->
+            <div class="carousel-inner">
+                {% for game in games %}
+                <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                    <div class="row justify-content-center">
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="row g-0">
+                                    {% if game.image %}
+                                    <div class="col-md-4">
+                                        <img src="{{ game.image.url }}" class="img-fluid rounded-start" alt="{{ game.name }}" style="height: 250px; width: 100%; object-fit: cover;">
+                                    </div>
+                                    {% endif %}
+                                    <div class="col-md-{% if game.image %}8{% else %}12{% endif %}">
+                                        <div class="card-body">
+                                            <h3 class="card-title">{{ game.name }}</h3>
+                                            <p class="card-text">{{ game.description }}</p>
+                                            <div class="mb-3">
+                                                <span class="badge bg-secondary">{{ game.get_category_display }}</span>
+                                                <span class="badge bg-info">Игроки: {{ game.min_players }}-{{ game.max_players }}</span>
+                                                <span class="badge bg-warning">Сложность: {{ game.difficulty }}/5</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <strong class="text-success h5">{{ game.price }} руб.</strong>
+                                                    <small class="text-muted d-block">аренда: {{ game.rental_price_per_day }} руб./день</small>
+                                                </div>
+                                                <a href="{% url 'game_detail' game.id %}" class="btn btn-primary">Подробнее</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="carousel-item active">
+                    <div class="row justify-content-center">
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-body text-center py-5">
+                                    <h3>Игры скоро появятся</h3>
+                                    <p class="text-muted">Мы активно пополняем наш ассортимент</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Кнопки управления -->
+            <button class="carousel-control-prev" type="button" data-bs-target="#gameCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Предыдущий</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#gameCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Следующий</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Все игры -->
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Все игры</h2>
+            <a href="{% url 'game_list' %}" class="btn btn-outline-primary">Смотреть все</a>
+        </div>
+
         <div class="row">
             {% for game in games %}
-            <div class="col-md-4 mb-3">
-                <div class="card">
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100">
                     {% if game.image %}
-                    <img src="{{ game.image.url }}" class="card-img-top" alt="{{ game.name }}">
-                    {% endif %}
-                    <div class="card-body">
-                        <h5 class="card-title">{{ game.name }}</h5>
-                        <p class="card-text">{{ game.description|truncatewords:20 }}</p>
-                        <p class="card-text">
-                            <strong>Цена: {{ game.price }} руб.</strong><br>
-                            <small>Аренда: {{ game.rental_price_per_day }} руб./день</small>
-                        </p>
-                        <a href="{% url 'game_detail' game.id %}" class="btn btn-outline-primary">Подробнее</a>
+                    <img src="{{ game.image.url }}" class="card-img-top" alt="{{ game.name }}" style="height: 200px; object-fit: cover;">
+                    {% else %}
+                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                        <span class="text-muted">Нет изображения</span>
                     </div>
+                    {% endif %}
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">{{ game.name }}</h5>
+                        <p class="card-text flex-grow-1">{{ game.description|truncatewords:15 }}</p>
+
+                        <div class="mb-2">
+                            <span class="badge bg-secondary">{{ game.get_category_display }}</span>
+                            <span class="badge bg-info">Игроки: {{ game.min_players }}-{{ game.max_players }}</span>
+                        </div>
+
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <strong class="text-success">{{ game.price }} руб.</strong>
+                                <small class="text-muted">аренда: {{ game.rental_price_per_day }} руб./день</small>
+                            </div>
+
+                            <div class="btn-group w-100" role="group">
+                                <a href="{% url 'game_detail' game.id %}" class="btn btn-outline-primary btn-sm">Подробнее</a>
+                                {% if game.available_for_rental > 0 %}
+                                <a href="{% url 'create_rental_game' game.id %}" class="btn btn-outline-success btn-sm">Арендовать</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    Игры не найдены. Попробуйте изменить фильтры.
                 </div>
             </div>
             {% endfor %}
         </div>
     </div>
 </div>
+
+<style>
+.carousel-item {
+    padding: 20px 0;
+}
+.carousel-control-prev,
+.carousel-control-next {
+    width: 5%;
+}
+.carousel-indicators {
+    bottom: -50px;
+}
+.carousel-indicators button {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin: 0 5px;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Автопереключение слайдов каждые 5 секунд
+    var myCarousel = document.getElementById('gameCarousel');
+    var carousel = new bootstrap.Carousel(myCarousel, {
+        interval: 5000,
+        wrap: true
+    });
+
+    // Остановка автопрокрутки при наведении
+    myCarousel.addEventListener('mouseenter', function() {
+        carousel.pause();
+    });
+
+    myCarousel.addEventListener('mouseleave', function() {
+        carousel.cycle();
+    });
+});
+</script>
 {% endblock %}
